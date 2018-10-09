@@ -1,64 +1,16 @@
 const express = require('express');
 const auth = require('express-basic-auth');
 const createError = require('http-errors');
-const authConf = require('./../config.json');
-const emailer = require('./../emailer');
-const Dispenser = require('./../models/Dispenser');
-const User = require('./../models/User');
+const config = require('./../config.json');
+const { getDisp, getUmb, getCreateUser } = require('./../util/db-middleware');
+const emailer = require('./../util/emailer');
+const tasks = require('./../util/tasks');
+const { Dispenser } = require('./../models');
 
 const router = express.Router();
 
-// middleware to get dispenser by ID
-function getDisp(req, res, next) {
-  const { id } = req.params;
-  if (!id) return next(createError(400, 'Provide dispenser ID'));
-
-  Dispenser.findById(id, (err, disp) => {
-    if (err) return next(createError(500, err));
-    if (!disp) return next(createError(404, 'Dispenser not found'));
-
-    req.disp = disp;
-    next();
-  });
-}
-
-// middleware to get umbrella by ID (comes after getDisp)
-function getUmb(req, res, next) {
-  if (!req.disp) return next(createError(500, 'Dispenser not fetched'));
-
-  const { umbId } = req.params;
-  if (!umbId) return next(createError(400, 'Provide umbrella ID'));
-
-  const umb = req.disp.umbrellas.id(umbId);
-  if (!umb) return next(createError(404, 'Umbrella not found'));
-
-  req.umb = umb;
-  next();
-}
-
-// middleware to get or create user by Andrew ID
-function getCreateUser(req, res, next) {
-  const { andrewId } = req.query;
-  if (!andrewId) return next(createError(400, 'Provide Andrew ID'));
-
-  User.findById(andrewId, (err, user) => {
-    if (err) return next(createError(500, err));
-    if (!user) {
-      const newUser = new User({ _id: andrewId });
-      newUser.save((saveErr) => {
-        if (err) return next(createError(500, saveErr));
-        req.andrewUser = newUser;
-        next();
-      });
-    } else {
-      req.andrewUser = user;
-      next();
-    }
-  });
-}
-
 /* POST add a new dispenser to the network (must be admin) */
-router.post('/add', auth(authConf), (req, res, next) => {
+router.post('/add', auth(config.auth), (req, res, next) => {
   if (req.auth.username !== 'admin') return next(createError(401, 'Not admin'));
 
   const { id, name } = req.query;
@@ -74,7 +26,9 @@ router.post('/add', auth(authConf), (req, res, next) => {
 });
 
 /* POST add a new umbrella to the dispenser (must be admin) */
-router.post('/:id/umbrellas/add', auth(authConf), getDisp, (req, res, next) => {
+router.post('/:id/umbrellas/add', auth(config.auth), [
+  getDisp,
+], (req, res, next) => {
   if (req.auth.username !== 'admin') return next(createError(401, 'Not admin'));
 
   const { umbId } = req.query;
@@ -88,28 +42,68 @@ router.post('/:id/umbrellas/add', auth(authConf), getDisp, (req, res, next) => {
 });
 
 /* POST borrow an umbrella from a dispenser */
-router.post('/:id/umbrellas/:umbId/borrow', auth(authConf), [
+router.post('/:id/umbrellas/:umbId/borrow', auth(config.auth), [
   getDisp, getUmb, getCreateUser,
 ], (req, res, next) => {
   if (req.umb.borrower) next(createError(409, 'Umbrella in use'));
 
-  req.umb.borrower = req.andrewUser._id;
-  req.umb.borrowed_at = Date.now();
+  const andrewId = req.andrewUser._id;
+  const borrowedAt = Date.now();
+  req.umb.borrower = andrewId;
+  req.umb.borrowed_at = borrowedAt;
   req.disp.save((err) => {
     if (err) return next(createError(500, err));
-    // TODO: send a borrow confirmation email
-    return res.send(`Umbrella ${req.umb._id} borrowed by ${req.andrewUser._id}`);
+
+    if (req.andrewUser.settings.borrow_emails) {
+      emailer.send({
+        template: 'borrow',
+        message: {
+          to: `${andrewId}@andrew.cmu.edu`,
+        },
+        locals: {
+          umb_id: req.umb._id,
+          borrow_location: req.disp.name,
+        },
+      }).then().catch();
+    }
+
+    const strikeAt = borrowedAt + config.duration;
+    tasks.add('strike', {
+      user: andrewId,
+      dispenser: req.disp._id,
+      umbrella: req.umb._id,
+      expiry: strikeAt,
+    }, (strikeTaskErr) => {
+      if (strikeTaskErr) return next(createError(500, err));
+
+      const reminderAt = req.andrewUser.settings.reminder_emails;
+      if (reminderAt) {
+        const remindAt = strikeAt - reminderAt;
+        tasks.add('email_reminder', {
+          user: andrewId,
+          dispenser: req.disp._id,
+          umbrella: req.umb._id,
+          expiry: remindAt,
+        }, (emailTaskErr) => {
+          if (emailTaskErr) return next(createError(500, err));
+          return res.send(`Umbrella ${req.umb._id} borrowed by ${andrewId} (will remind)`);
+        });
+      } else {
+        return res.send(`Umbrella ${req.umb._id} borrowed by ${andrewId}`);
+      }
+    });
   });
 });
 
 /* POST return an umbrella to a dispenser */
-router.post('/:id/umbrellas/:umbId/return', auth(authConf), [
+router.post('/:id/umbrellas/:umbId/return', auth(config.auth), [
   getDisp, getUmb, getCreateUser,
 ], (req, res, next) => {
   const { returnedDate } = req.query;
+  const andrewId = req.andrewUser._id;
   if (!returnedDate) return next(createError(400, 'Provide datetime'));
   if (!req.umb.borrower) return next(createError(409, 'Umbrella not out'));
-  if (req.umb.borrower !== req.andrewUser._id) {
+  if (req.umb.borrower !== andrewId) {
     return next(createError(409, 'Umbrella borrower mismatch'));
   }
 
@@ -127,8 +121,21 @@ router.post('/:id/umbrellas/:umbId/return', auth(authConf), [
     req.umb.storage_location = req.disp._id;
     req.disp.save((dispErr) => {
       if (dispErr) return next(createError(500, dispErr));
-      // TODO: send a return confirmation email
-      return res.send(`Umbrella ${req.umb._id} returned by ${req.andrewUser._id}`);
+
+      if (req.andrewUser.settings.return_emails) {
+        emailer.send({
+          template: 'return',
+          message: {
+            to: `${andrewId}@andrew.cmu.edu`,
+          },
+          locals: {
+            umb_id: req.umb._id,
+            borrow_location: req.disp._id,
+          },
+        }).then().catch();
+      }
+
+      return res.send(`Umbrella ${req.umb._id} returned by ${andrewId}`);
     });
   });
 });
