@@ -70,17 +70,10 @@ router.post('/:id/borrow', auth.authorizer, [
     if (err || !lease) return next(createError(500, err));
 
     if (!req.andrewUser.guest && req.andrewUser.settings.borrow_emails) {
-      emailer.send({
-        template: 'borrow',
-        message: {
-          to: `${andrewId}@andrew.cmu.edu`,
-        },
-        locals: {
-          andrew_id: andrewId,
-          umb_id: umbId,
-          borrow_location: req.disp.name,
-        },
-      }).then().catch();
+      emailer(andrewId, 'borrow', {
+        umb_id: umbId,
+        borrow_location: req.disp.name,
+      });
     }
 
     const reminderAt = req.andrewUser.settings.reminder_emails;
@@ -128,17 +121,10 @@ router.post('/:id/return', auth.authorizer, [
         if (umbErr) return next(createError(500, umbErr));
 
         if (!andrewUser.guest && andrewUser.settings.return_emails) {
-          emailer.send({
-            template: 'return',
-            message: {
-              to: `${andrewId}@andrew.cmu.edu`,
-            },
-            locals: {
-              andrew_id: andrewId,
-              umb_id: umbId,
-              borrow_location: dispId,
-            },
-          }).then().catch();
+          emailer(andrewId, 'return', {
+            umb_id: umbId,
+            borrow_location: dispId,
+          });
         }
 
         return res.send(`Umbrella ${req.umb._id} from ${andrewId}`);

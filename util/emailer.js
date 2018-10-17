@@ -1,6 +1,13 @@
+const fs = require('fs');
 const path = require('path');
+const handlebars = require('handlebars');
 const nodemailer = require('nodemailer');
-const Email = require('email-templates');
+const emails = require('./../emails.json');
+
+const templates = {};
+Object.keys(emails).forEach((filename) => {
+  templates[filename] = fs.readFileSync(path.resolve(`emails/${filename}.hbs`));
+});
 
 const transport = nodemailer.createTransport({
   service: 'Gmail',
@@ -10,17 +17,13 @@ const transport = nodemailer.createTransport({
   },
 });
 
-const email = new Email({
-  views: {
-    root: path.resolve('./../emails/'),
-    options: {
-      extension: 'hbs',
-    },
-  },
-  message: {
+function send(user, template, options = {}, callback) {
+  transport.sendMail({
+    to: `${user}@andrew.cmu.edu`,
     from: process.env.MAILER_EMAIL,
-  },
-  transport,
-});
+    subject: emails[template],
+    html: handlebars.compile(templates[template].toString())({ user, ...options }),
+  }, callback);
+}
 
-module.exports = email;
+module.exports = send;

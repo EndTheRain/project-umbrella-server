@@ -33,15 +33,7 @@ function getCreateUser(req, res, next) {
         if (err) return next(createError(500, saveErr));
         req.andrewUser = newUser;
         if (!guest) {
-          emailer.send({
-            template: 'join',
-            message: {
-              to: `${andrewId}@andrew.cmu.edu`,
-            },
-            locals: {
-              andrew_id: andrewId,
-            },
-          }).then().catch();
+          emailer(andrewId, 'join');
         }
         next();
       });
@@ -52,9 +44,11 @@ function getCreateUser(req, res, next) {
   });
 }
 
-// middleware to get an open lease by user and umbrella
+// middleware to get an open lease by user and umbrella (after getCreateUser)
 function getSomeLease(req, res, next) {
-  const { andrewId } = req.query;
+  if (!req.andrewUser) return next(createError(500, 'User not fetched'));
+
+  const andrewId = req.andrewUser._id;
   if (!andrewId) return next(createError(400, 'Provide Andrew ID'));
 
   const { id } = req.params;
