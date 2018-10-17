@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 
 const userSchema = new mongoose.Schema({
   _id: { type: String, required: true },
+  guest: { type: Boolean, required: true },
   strikes: {
     type: Number,
     default: 0,

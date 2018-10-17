@@ -13,7 +13,7 @@ const {
 
 const router = express.Router();
 
-/* POST add a new umbrella to the dispenser (must be admin) */
+/* POST add a new umbrella to the dispenser (ADMIN, provide umbId/dispId) */
 router.post('/add', auth.adminizer, (req, res, next) => {
   const { umbId, dispId } = req.query;
   if (!umbId) return next(createError(400, 'Provide umbrella ID'));
@@ -30,8 +30,26 @@ router.post('/add', auth.adminizer, (req, res, next) => {
   });
 });
 
-/* POST borrow an umbrella from a dispenser (must provide andrewId) */
-router.post('/:umbId/borrow', auth.authorizer, [
+/* POST make an umbrella (un)available for circulation (ADMIN) */
+router.post('/:id/(|available|unavailable)', auth.adminizer, (req, res, next) => {
+  const { id } = req.params;
+  if (!id) return next(createError(400, 'Provide umbrella ID'));
+
+  Umbrella.findById(id, (err, umb) => {
+    if (err) return next(createError(500, err));
+    if (!umb) return next(createError(404, 'Umbrella not found'));
+
+    const state = req.path.substring(req.path.lastIndexOf('/') + 1);
+    umb.status = state === 'available'; // eslint-disable-line no-param-reassign
+    umb.save((saveErr) => {
+      if (saveErr) return next(createError(500, saveErr));
+      return res.send(`Umbrella ${id} available ${umb.status}`);
+    });
+  });
+});
+
+/* POST borrow an umbrella from a dispenser (provide andrewId) */
+router.post('/:id/borrow', auth.authorizer, [
   getUmb, getCreateUser, getSomeLease,
 ], (req, res, next) => {
   if (req.openLease) return next(createError(409, 'Lease already exists'));
@@ -51,7 +69,7 @@ router.post('/:umbId/borrow', auth.authorizer, [
   umbLease.save((err, lease) => {
     if (err || !lease) return next(createError(500, err));
 
-    if (req.andrewUser.settings.borrow_emails) {
+    if (!req.andrewUser.guest && req.andrewUser.settings.borrow_emails) {
       emailer.send({
         template: 'borrow',
         message: {
@@ -66,7 +84,7 @@ router.post('/:umbId/borrow', auth.authorizer, [
     }
 
     const reminderAt = req.andrewUser.settings.reminder_emails;
-    if (reminderAt) {
+    if (!req.andrewUser.guest && reminderAt) {
       const remindAt = expiry - reminderAt;
       tasks.add('email_reminder', {
         user: andrewId,
@@ -82,8 +100,8 @@ router.post('/:umbId/borrow', auth.authorizer, [
   });
 });
 
-/* POST return an umbrella to a dispenser (must provide returnAt) */
-router.post('/:umbId/return', auth.authorizer, [
+/* POST return an umbrella to a dispenser (provide returnAt) */
+router.post('/:id/return', auth.authorizer, [
   getUmb, getUmbLease,
 ], (req, res, next) => {
   if (!req.openLease) return next(createError(404, 'Lease not found'));
@@ -109,7 +127,7 @@ router.post('/:umbId/return', auth.authorizer, [
       req.umb.save((umbErr) => {
         if (umbErr) return next(createError(500, umbErr));
 
-        if (andrewUser.settings.return_emails) {
+        if (!andrewUser.guest && andrewUser.settings.return_emails) {
           emailer.send({
             template: 'return',
             message: {

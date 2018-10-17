@@ -8,7 +8,7 @@ const { salts } = require('./../config.json');
 function authorizer(req, res, next) {
   const credentials = auth(req);
   if (!credentials) return next(createError(403, 'No credentials'));
-  Dispenser.findById(credentials.name, (err, disp) => {
+  Dispenser.findOne({ _id: credentials.name, status: true }, (err, disp) => {
     if (err) return next(createError(500, err));
     if (!disp) return next(createError(403, 'Dispenser not found'));
     bcrypt.compare(credentials.pass, disp.key, (compErr, result) => {

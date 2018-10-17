@@ -4,10 +4,10 @@ const emailer = require('./emailer');
 
 // middleware to get umbrella by ID
 function getUmb(req, res, next) {
-  const { umbId } = req.params;
-  if (!umbId) return next(createError(400, 'Provide umbrella ID'));
+  const { id } = req.params;
+  if (!id) return next(createError(400, 'Provide umbrella ID'));
 
-  Umbrella.findById(umbId, (err, umb) => {
+  Umbrella.findOne({ _id: id, status: true }, (err, umb) => {
     if (err) return next(createError(500, err));
     if (!umb) return next(createError(404, 'Umbrella not found'));
 
@@ -18,25 +18,31 @@ function getUmb(req, res, next) {
 
 // middleware to get or create user by Andrew ID
 function getCreateUser(req, res, next) {
-  const { andrewId } = req.query;
-  if (!andrewId) return next(createError(400, 'Provide Andrew ID'));
+  const { cardId } = req.query;
+  if (!cardId) return next(createError(400, 'Provide card ID'));
+
+  // TODO: look up andrew ID from card ID
+  const andrewId = cardId;
+  const guest = false;
 
   User.findById(andrewId, (err, user) => {
     if (err) return next(createError(500, err));
     if (!user) {
-      const newUser = new User({ _id: andrewId });
+      const newUser = new User({ _id: andrewId, guest });
       newUser.save((saveErr) => {
         if (err) return next(createError(500, saveErr));
         req.andrewUser = newUser;
-        emailer.send({
-          template: 'join',
-          message: {
-            to: `${andrewId}@andrew.cmu.edu`,
-          },
-          locals: {
-            andrew_id: andrewId,
-          },
-        }).then().catch();
+        if (!guest) {
+          emailer.send({
+            template: 'join',
+            message: {
+              to: `${andrewId}@andrew.cmu.edu`,
+            },
+            locals: {
+              andrew_id: andrewId,
+            },
+          }).then().catch();
+        }
         next();
       });
     } else {
@@ -51,12 +57,12 @@ function getSomeLease(req, res, next) {
   const { andrewId } = req.query;
   if (!andrewId) return next(createError(400, 'Provide Andrew ID'));
 
-  const { umbId } = req.params;
-  if (!umbId) return next(createError(400, 'Provide umbrella ID'));
+  const { id } = req.params;
+  if (!id) return next(createError(400, 'Provide umbrella ID'));
 
   Lease.findOne({
     is_open: true,
-    $or: [{ user: andrewId }, { umbrella: umbId }],
+    $or: [{ user: andrewId }, { umbrella: id }],
   }, (err, lease) => {
     if (err) return next(createError(500, err));
     req.openLease = lease;
@@ -66,10 +72,10 @@ function getSomeLease(req, res, next) {
 
 // middleware to get an open lease for an umbrella
 function getUmbLease(req, res, next) {
-  const { umbId } = req.params;
-  if (!umbId) return next(createError(400, 'Provide umbrella ID'));
+  const { id } = req.params;
+  if (!id) return next(createError(400, 'Provide umbrella ID'));
 
-  Lease.findOne({ is_open: true, umbrella: umbId }, (err, lease) => {
+  Lease.findOne({ is_open: true, umbrella: id }, (err, lease) => {
     if (err) return next(createError(500, err));
     req.openLease = lease;
     next();
