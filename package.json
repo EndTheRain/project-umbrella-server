@@ -6,10 +6,11 @@
     "start": "node ./bin/www"
   },
   "dependencies": {
+    "basic-auth": "^2.0.1",
+    "bcrypt": "^3.0.1",
     "cookie-parser": "~1.4.3",
     "email-templates": "^5.0.1",
     "express": "~4.16.0",
-    "express-basic-auth": "^1.1.5",
     "hbs": "~4.0.1",
     "http-errors": "~1.6.2",
     "mongoose": "^5.3.1",

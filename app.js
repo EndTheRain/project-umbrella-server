@@ -7,6 +7,7 @@ const mongoose = require('mongoose');
 
 const indexRouter = require('./routes/index');
 const dispensersRouter = require('./routes/dispensers');
+const umbrellasRouter = require('./routes/umbrellas');
 
 const app = express();
 
@@ -27,6 +28,7 @@ mongoose.connect('mongodb://localhost/pup');
 
 app.use('/', indexRouter);
 app.use('/dispensers', dispensersRouter);
+app.use('/umbrellas', umbrellasRouter);
 
 // catch 404 and forward to error handler
 app.use((req, res, next) => {

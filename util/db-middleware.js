@@ -1,32 +1,19 @@
 const createError = require('http-errors');
-const { Dispenser, User } = require('./../models');
+const { Umbrella, User, Lease } = require('./../models');
+const emailer = require('./emailer');
 
-// middleware to get dispenser by ID
-function getDisp(req, res, next) {
-  const { id } = req.params;
-  if (!id) return next(createError(400, 'Provide dispenser ID'));
-
-  Dispenser.findById(id, (err, disp) => {
-    if (err) return next(createError(500, err));
-    if (!disp) return next(createError(404, 'Dispenser not found'));
-
-    req.disp = disp;
-    next();
-  });
-}
-
-// middleware to get umbrella by ID (comes after getDisp)
+// middleware to get umbrella by ID
 function getUmb(req, res, next) {
-  if (!req.disp) return next(createError(500, 'Dispenser not fetched'));
-
   const { umbId } = req.params;
   if (!umbId) return next(createError(400, 'Provide umbrella ID'));
 
-  const umb = req.disp.umbrellas.id(umbId);
-  if (!umb) return next(createError(404, 'Umbrella not found'));
+  Umbrella.findById(umbId, (err, umb) => {
+    if (err) return next(createError(500, err));
+    if (!umb) return next(createError(404, 'Umbrella not found'));
 
-  req.umb = umb;
-  next();
+    req.umb = umb;
+    next();
+  });
 }
 
 // middleware to get or create user by Andrew ID
@@ -41,6 +28,15 @@ function getCreateUser(req, res, next) {
       newUser.save((saveErr) => {
         if (err) return next(createError(500, saveErr));
         req.andrewUser = newUser;
+        emailer.send({
+          template: 'join',
+          message: {
+            to: `${andrewId}@andrew.cmu.edu`,
+          },
+          locals: {
+            andrew_id: andrewId,
+          },
+        }).then().catch();
         next();
       });
     } else {
@@ -50,4 +46,36 @@ function getCreateUser(req, res, next) {
   });
 }
 
-module.exports = { getDisp, getUmb, getCreateUser };
+// middleware to get an open lease by user and umbrella
+function getSomeLease(req, res, next) {
+  const { andrewId } = req.query;
+  if (!andrewId) return next(createError(400, 'Provide Andrew ID'));
+
+  const { umbId } = req.params;
+  if (!umbId) return next(createError(400, 'Provide umbrella ID'));
+
+  Lease.findOne({
+    is_open: true,
+    $or: [{ user: andrewId }, { umbrella: umbId }],
+  }, (err, lease) => {
+    if (err) return next(createError(500, err));
+    req.openLease = lease;
+    next();
+  });
+}
+
+// middleware to get an open lease for an umbrella
+function getUmbLease(req, res, next) {
+  const { umbId } = req.params;
+  if (!umbId) return next(createError(400, 'Provide umbrella ID'));
+
+  Lease.findOne({ is_open: true, umbrella: umbId }, (err, lease) => {
+    if (err) return next(createError(500, err));
+    req.openLease = lease;
+    next();
+  });
+}
+
+module.exports = {
+  getUmb, getCreateUser, getSomeLease, getUmbLease,
+};

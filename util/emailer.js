@@ -2,7 +2,7 @@ const path = require('path');
 const nodemailer = require('nodemailer');
 const Email = require('email-templates');
 
-const transport = nodemailer.createTransport('SMTP', {
+const transport = nodemailer.createTransport({
   service: 'Gmail',
   auth: {
     user: process.env.MAILER_EMAIL,
@@ -18,7 +18,7 @@ const email = new Email({
     },
   },
   message: {
-    from: process.env.MAILER_ENV,
+    from: process.env.MAILER_EMAIL,
   },
   transport,
 });
