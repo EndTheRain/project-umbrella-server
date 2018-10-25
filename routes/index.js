@@ -8,4 +8,9 @@ router.get('/', (req, res) => {
   res.render('index', { title: 'Express' });
 });
 
+/* GET admin console */
+router.get('/admin', (req, res) => {
+  res.render('admin');
+});
+
 module.exports = router;

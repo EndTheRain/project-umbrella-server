@@ -1,2 +1,266 @@
-<h1>{{title}}</h1>
-<p>Welcome to {{title}}</p>
+<div id="raincloud">
+</div>
+
+<section class="hero is-dark is-fullheight has-background-image">
+  <div class="hero-head">
+    {{> navbar dark=true}}
+  </div>
+
+  <div class="hero-body">
+    <div class="container has-text-centered">
+      <h1 id="main-title" class="title is-1">
+        Terrorized by the rain?
+      </h1>
+      <h2 id="main-subtitle" class="subtitle is-2">
+        So are we. Umbrellas for all.
+      </h2>
+      <div class="columns">
+        <div class="column is-6 is-4-fullhd is-offset-3 is-offset-4-fullhd">
+          <div id="updates-form" class="field has-addons">
+            <div class="control is-expanded has-icons-left">
+              <input id="updates-input" class="input is-medium" type="email" placeholder="Get email updates">
+              <span class="icon is-left">
+                <i class="fas fa-umbrella"></i>
+              </span>
+            </div>
+            <div class="control">
+              <a id="updates-button" class="button is-primary is-medium">
+                Sign up!
+              </a>
+            </div>
+          </div>
+          <article id="updates-success" class="message is-info is-hidden">
+            <div class="message-body">
+              <span class="icon">
+                <i class="fas fa-smile"></i>
+              </span>
+              <span>Thanks for your interest in the Plaid Umbrella Project! You should have received an email asking to confirm your subscription. If not, please <a id="updates-button-2">click here</a> so we can add you manually.</span>
+            </div>
+          </article>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- About section -->
+<section id="about" class="section">
+  <div class="container">
+    <div class="columns">
+      <div class="column is-8-desktop is-offset-2-desktop">
+        <div id="about-para" class="subtitle">
+          Pittsburgh weather is unpredictable. It could start raining, hailing, or snowing any minute. As a student at Carnegie Mellon, it can be difficult to stay dry when walking between classes or just hanging out on The Cut. That's why we're launching the <u><strong class="logo">Plaid Umbrella Project</strong></u> to make umbrellas accessible to everyone on campus for free. Our goal is to install a network of umbrella dispensers so when the torrential downpour begins, you just swipe your ID card and grab an umbrella. Return it the next day. It's that simple.
+        </div>
+      </div>
+    </div>
+    <br><br>
+    <div class="columns has-text-centered">
+      <div class="column">
+        <span class="icon is-large has-text-danger">
+          <i class="fas fa-piggy-bank fa-2x"></i>
+        </span>
+        <p class="title is-4">Free</p>
+        <p class="subtitle is-6">Swipe your ID card and pick up an umbrella. No fees.</p>
+      </div>
+      <div class="column">
+        <span class="icon is-large has-text-info">
+          <i class="fas fa-location-arrow fa-2x"></i>
+        </span>
+        <p class="title is-4">Convenient</p>
+        <p class="subtitle is-6">We'll put umbrella dispensers in easy-to-access locations.</p>
+      </div>
+      <div class="column">
+        <span class="icon is-large has-text-warning">
+          <i class="fas fa-umbrella-beach fa-2x"></i>
+        </span>
+        <p class="title is-4">Quality</p>
+        <p class="subtitle is-6">Plaid umbrellas that are big enough to keep you dry.</p>
+      </div>
+      <div class="column">
+        <span class="icon is-large has-text-success">
+          <i class="fas fa-users fa-2x"></i>
+        </span>
+        <p class="title is-4">Student-Run</p>
+        <p class="subtitle is-6">Managed and developed by students just like you.</p>
+      </div>
+    </div>
+  </div>
+</section>
+<div class="hero is-dark is-bold">
+  <div class="hero-body">
+    <div class="container">
+      <div class="columns">
+        <div class="column is-8-desktop is-offset-2-desktop has-text-centered">
+          <div class="subtitle">
+            <span>Check out our appearance on WTAE 4 Action News!</span>
+            <a class="has-text-white" href="javascript:alert('Article not available yet');">Read more &raquo;</a>
+          </div>
+          <video controls>
+            <source src="assets/wtae.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+          </video>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Team section -->
+<section id="team" class="section">
+  <div class="container">
+    <p class="has-text-centered">
+      <span class="title is-4">
+        Our Team
+      </span>
+    </p>
+    <br>
+    <!-- <div class="columns has-text-centered is-multiline">
+      <div class="column is-3">
+        <center>
+          <figure class="image is-128x128">
+            <img class="is-rounded" src="https://bulma.io/images/placeholders/128x128.png">
+          </figure>
+        </center>
+        <br>
+        <p class="title is-5">Ben Kaplan</p>
+        <p class="subtitle is-6">Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>
+      </div>
+      <div class="column is-3">
+        <center>
+          <figure class="image is-128x128">
+            <img class="is-rounded" src="https://bulma.io/images/placeholders/128x128.png">
+          </figure>
+        </center>
+        <br>
+        <p class="title is-5">Rajat Mehndiratta</p>
+        <p class="subtitle is-6">Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>
+      </div>
+      <div class="column is-3">
+        <center>
+          <figure class="image is-128x128">
+            <img class="is-rounded" src="https://bulma.io/images/placeholders/128x128.png">
+          </figure>
+        </center>
+        <br>
+        <p class="title is-5">Person 3</p>
+        <p class="subtitle is-6">Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>
+      </div>
+      <div class="column is-3">
+        <center>
+          <figure class="image is-128x128">
+            <img class="is-rounded" src="https://bulma.io/images/placeholders/128x128.png">
+          </figure>
+        </center>
+        <br>
+        <p class="title is-5">Person 4</p>
+        <p class="subtitle is-6">Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>
+      </div>
+      <div class="column is-3">
+        <center>
+          <figure class="image is-128x128">
+            <img class="is-rounded" src="https://bulma.io/images/placeholders/128x128.png">
+          </figure>
+        </center>
+        <br>
+        <p class="title is-5">Person 5</p>
+        <p class="subtitle is-6">Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>
+      </div>
+      <div class="column is-3">
+        <center>
+          <figure class="image is-128x128">
+            <img class="is-rounded" src="https://bulma.io/images/placeholders/128x128.png">
+          </figure>
+        </center>
+        <br>
+        <p class="title is-5">Person 6</p>
+        <p class="subtitle is-6">Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>
+      </div>
+      <div class="column is-3">
+        <center>
+          <figure class="image is-128x128">
+            <img class="is-rounded" src="https://bulma.io/images/placeholders/128x128.png">
+          </figure>
+        </center>
+        <br>
+        <p class="title is-5">Person 7</p>
+        <p class="subtitle is-6">Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>
+      </div>
+      <div class="column is-3">
+        <center>
+          <figure class="image is-128x128">
+            <img class="is-rounded" src="https://bulma.io/images/placeholders/128x128.png">
+          </figure>
+        </center>
+        <br>
+        <p class="title is-5">Person 8</p>
+        <p class="subtitle is-6">Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>
+      </div>
+    </div> -->
+
+    <!-- Temporary placeholder message -->
+    <div class="columns">
+      <div class="column is-8-desktop is-offset-2-desktop">
+        <article class="message">
+          <div class="message-body">
+            <span class="icon">
+              <i class="fas fa-wrench"></i>
+            </span>
+            <span>We're still working on expressing ourselves. For now, imagine that this project is run by ghosts.</span>
+          </div>
+        </article>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Contact section -->
+<div id="contact" class="hero is-primary">
+  <div class="hero-body">
+    <div class="container">
+      <div class="columns">
+        <div class="column is-8-desktop is-offset-2-desktop">
+          <div class="has-text-centered">
+            <p class="title is-4">
+              Submit Feedback
+            </p>
+            <p class="subtitle is-5">
+              Have an idea you'd like to share? We'd love to hear it.
+            </p>
+          </div>
+          <br>
+          <article id="contact-success" class="message is-success is-hidden">
+            <div class="message-body">
+              <span class="icon">
+                <i class="fas fa-check"></i>
+              </span>
+              <span>Thanks for your message. We'll try to get back ASAP.</span>
+            </div>
+          </article>
+          <div id="contact-form">
+            <div class="field is-grouped">
+              <div class="control is-expanded has-icons-left">
+                <input id="contact-subject" class="input" type="text" placeholder="Subject">
+                <span class="icon is-small is-left">
+                  <i class="fas fa-envelope"></i>
+                </span>
+              </div>
+              <div class="control">
+                <button id="contact-send" class="button is-white is-outlined">
+                  <span>Send</span>
+                  <span class="icon">
+                    <i class="fas fa-paper-plane"></i>
+                  </span>
+                </button>
+              </div>
+            </div>
+            <div class="field">
+              <div class="control">
+                <textarea id="contact-message" class="textarea" placeholder="Message"></textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

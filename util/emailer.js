@@ -17,13 +17,15 @@ const transport = nodemailer.createTransport({
   },
 });
 
-function send(user, template, options = {}, callback) {
+function send(user, template, options, callback) {
   transport.sendMail({
     to: `${user}@andrew.cmu.edu`,
     from: process.env.MAILER_EMAIL,
     subject: emails[template],
     html: handlebars.compile(templates[template].toString())({ user, ...options }),
-  }, callback);
+  }, (err) => {
+    if (callback) callback(err);
+  });
 }
 
 module.exports = send;

@@ -1,8 +1,10 @@
 const createError = require('http-errors');
 const express = require('express');
+const hbs = require('express-handlebars');
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
+const sassMiddleware = require('node-sass-middleware');
 const mongoose = require('mongoose');
 
 const indexRouter = require('./routes/index');
@@ -12,13 +14,25 @@ const umbrellasRouter = require('./routes/umbrellas');
 const app = express();
 
 // view engine setup
-app.set('views', path.join(__dirname, 'views'));
+app.engine('hbs', hbs({
+  extname: 'hbs',
+  defaultLayout: 'main',
+  layoutsDir: path.join(__dirname, '/views/layouts/'),
+  partialsDir: path.join(__dirname, '/views/partials/'),
+}));
 app.set('view engine', 'hbs');
 
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
+app.use(sassMiddleware({
+  src: path.join(__dirname, 'public/'),
+  dest: path.join(__dirname, 'public/'),
+  indentedSyntax: true,
+  outputStyle: 'compressed',
+  sourceMap: true,
+}));
 app.use(express.static(path.join(__dirname, 'public')));
 
 // connect to db
