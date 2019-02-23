@@ -6,6 +6,7 @@ const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 const sassMiddleware = require('node-sass-middleware');
 const mongoose = require('mongoose');
+const { scheduleAll } = require('./util/tasks');
 
 const indexRouter = require('./routes/index');
 const dispensersRouter = require('./routes/dispensers');
@@ -38,7 +39,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 // connect to db
 mongoose.connect('mongodb://localhost/pup');
 
-// TODO: email reminder system + persistence for this
+// schedule all tasks
+scheduleAll();
 
 app.use('/', indexRouter);
 app.use('/dispensers', dispensersRouter);
@@ -50,7 +52,7 @@ app.use((req, res, next) => {
 });
 
 // error handler
-app.use((err, req, res) => {
+app.use((err, req, res, next) => {
   // set locals, only providing error in development
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};

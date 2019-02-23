@@ -1,5 +1,6 @@
 const express = require('express');
 const createError = require('http-errors');
+const moment = require('moment');
 const { duration } = require('./../config.json');
 const auth = require('./../util/auth');
 const {
@@ -71,8 +72,10 @@ router.post('/:id/borrow', auth.authorizer, [
 
     if (!req.andrewUser.guest && req.andrewUser.settings.borrow_emails) {
       emailer(andrewId, 'borrow', {
+        andrewId,
         umb_id: umbId,
         borrow_location: req.disp.name,
+        lease_length: moment.duration(duration).humanize(),
       });
     }
 
@@ -99,7 +102,7 @@ router.post('/:id/return', auth.authorizer, [
 ], (req, res, next) => {
   if (!req.openLease) return next(createError(404, 'Lease not found'));
 
-  const { returnAt } = req.query;
+  const { returnAt } = req.body;
   if (!returnAt) return next(createError(400, 'Provide datetime'));
   const andrewId = req.openLease.user;
   const dispId = req.disp._id;
@@ -122,8 +125,9 @@ router.post('/:id/return', auth.authorizer, [
 
         if (!andrewUser.guest && andrewUser.settings.return_emails) {
           emailer(andrewId, 'return', {
+            andrewId,
             umb_id: umbId,
-            borrow_location: dispId,
+            return_location: req.disp.name,
           });
         }
 

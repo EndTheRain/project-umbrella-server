@@ -4,7 +4,7 @@ const emailer = require('./emailer');
 // do a task and remove it from db
 function exec(id) {
   Task.findById(id, (err, task) => {
-    if (err) return;
+    if (err || !task) return;
     if (task.type === 'email_reminder') {
       Lease.findOne({ _id: task.lease, is_open: true }, (leaseErr, lease) => {
         if (leaseErr || !lease) return;
@@ -32,8 +32,17 @@ function exec(id) {
 // schedule a task with settimeout
 function schedule(id) {
   Task.findById(id, (err, task) => {
-    if (!err) setTimeout(() => exec(id), task.execute_at - Date.now());
+    if (!err && task) setTimeout(() => exec(id), task.execute_at - Date.now());
   });
+}
+
+// schedule all tasks with settimeout
+function scheduleAll() {
+  Task.find({}, (err, tasks) => {
+    if (!err && tasks) tasks.forEach((task) => {
+      setTimeout(() => exec(task._id), task.execute_at - Date.now());
+    });
+  })
 }
 
 // create a new task in db and schedule
@@ -42,7 +51,7 @@ function add(type, options, callback) {
     type, ...options,
   });
   task.save((err, savedTask) => {
-    if (err) return callback(err);
+    if (err || !savedTask) return callback(err);
     const id = savedTask._id;
     setTimeout(() => exec(id), savedTask.execute_at - Date.now());
     callback(null);
@@ -52,5 +61,6 @@ function add(type, options, callback) {
 module.exports = {
   add,
   schedule,
+  scheduleAll,
   exec,
 };

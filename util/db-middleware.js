@@ -18,7 +18,7 @@ function getUmb(req, res, next) {
 
 // middleware to get or create user by Andrew ID
 function getCreateUser(req, res, next) {
-  const { cardId } = req.query;
+  const { cardId } = req.body;
   if (!cardId) return next(createError(400, 'Provide card ID'));
 
   // TODO: look up andrew ID from card ID
@@ -33,7 +33,7 @@ function getCreateUser(req, res, next) {
         if (err) return next(createError(500, saveErr));
         req.andrewUser = newUser;
         if (!guest) {
-          emailer(andrewId, 'join');
+          emailer(andrewId, 'join', { andrewId });
         }
         next();
       });
