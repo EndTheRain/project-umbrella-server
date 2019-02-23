@@ -1,6 +1,7 @@
 const bcrypt = require('bcrypt');
 const auth = require('basic-auth');
 const createError = require('http-errors');
+const { admin } = require('./../config.json');
 const { Dispenser } = require('./../models');
 const { salts } = require('./../config.json');
 
@@ -25,7 +26,7 @@ function adminizer(req, res, next) {
   const credentials = auth(req);
   if (!credentials) return next(createError(403, 'No credentials'));
   if (credentials.name !== 'admin') return next(createError(403, 'Wrong name'));
-  bcrypt.compare(credentials.pass, process.env.ADMIN_KEY, (err, result) => {
+  bcrypt.compare(credentials.pass, admin, (err, result) => {
     if (err) return next(createError(500, err));
     if (!result) return next(createError(403, 'Invalid credentials'));
     next();
